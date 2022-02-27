@@ -11,6 +11,20 @@ from utils import db
 
 app = Flask(__name__)
 
+def get_tickers():
+    """
+        DB에 저장된 ticker들을 반환
+    """
+    conn = db.get_connector()
+    cur = conn.cursor()
+
+    sql = "SELECT ticker FROM service.tb_ticker"
+
+    cur.execute(sql)
+    tickers = list(map(lambda x:x[0], cur.fetchall()))
+
+    return tickers
+
 @app.route("/service/stock", methods=["POST"])
 def collect_stock_prices():
     """
@@ -18,14 +32,16 @@ def collect_stock_prices():
         1. json을 포함하는 request
     """
     if request.method == "POST":
-        tickers = request.get_json().get("tickers", ["SPY"])
+        tickers = get_tickers()
 
+        print(tickers)
         sql = f"""
                 BEGIN;
                 DROP TABLE IF EXISTS service.stock;
                 CREATE TABLE service.stock (
                     ts timestamp,
                     close FLOAT,
+                    adj_close FLOAT,
                     ticker VARCHAR
                 );
             """
@@ -33,8 +49,8 @@ def collect_stock_prices():
             raw_df = yf.download([ticker])
             for ts, row in raw_df.iterrows():
                 sql += f"""
-                        INSERT INTO service.stock (ts, close, ticker)
-                        VALUES ('{ts.strftime("%Y-%m-%d %H:%M:%S")}', {row.Close}, '{ticker}');
+                        INSERT INTO service.stock (ts, close, adj_close, ticker)
+                        VALUES ('{ts.strftime("%Y-%m-%d %H:%M:%S")}', {row.Close}, {getattr(row, 'Adj Close')}, '{ticker}');
                     """
 
         conn = db.get_connector()
@@ -42,7 +58,7 @@ def collect_stock_prices():
         cur.execute(sql)
         cur.execute("END;")
     else:
-        raise Exception("[ERROR] request must be POST method")
+        raise Exception("[ERROR] request must be GET method")
 
     return "done"
 

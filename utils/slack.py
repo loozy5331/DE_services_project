@@ -1,3 +1,5 @@
+import yfinance as yf
+
 from utils import db
 
 class SlackStockBot:
@@ -16,12 +18,13 @@ class SlackStockBot:
         result += "- SHOW TICKERS: show all saving tickers\n"
         result += "- INSERT TICKER {TICKER_NAME}: insert ticker in db\n"
         result += "- DELETE TICKER {TICKER_NAME}: delete ticker in db\n"
+        result += "- SUMMARY : summary stock's indexs"
 
         return result
 
-    def get_stock_tickers(self,):
+    def get_stock_tickers(self):
         """
-            DB에 저장된 ticker 목록을 제공
+            DB에 저장된 ticker들 반환
         """
         conn = db.get_connector()
         cur = conn.cursor()
@@ -34,12 +37,24 @@ class SlackStockBot:
         cur.close()
         conn.close()
 
+        return tickers
+
+    def show_stock_tickers(self,):
+        """
+            DB에 저장된 ticker 목록을 제공
+        """
+        tickers = self.get_stock_tickers()
         return "[TICKER LIST]\n" + ", ".join(tickers)
 
     def insert_ticker(self, ticker):
         """
             DB에 ticker를 추가
         """
+        # check valid ticker
+        _ticker = yf.Ticker(ticker)
+        if not hasattr(_ticker, "info") or not _ticker.info["marketCap"]:
+            return f"[ERROR] {ticker} is invalid ticker name"
+
         self.delete_ticker(ticker) # 중복 제거
 
         conn = db.get_connector()
@@ -54,7 +69,34 @@ class SlackStockBot:
         cur.close()
         conn.close()
 
-        return f"AFTER {self.get_stock_tickers()}"
+        return f"AFTER {self.show_stock_tickers()}"
+
+    def show_summary(self):
+        """
+            요약 테이블에 포함된 정보들을 반환
+        """
+        result = "[RECENT MDD LIST]\n"
+
+        tickers = self.get_stock_tickers()
+        conn = db.get_connector()
+        cur = conn.cursor()
+
+        for ticker in tickers:
+            sql = f"""
+                SELECT adj_close, mv200, high_52w, low_52w FROM summary.stock
+                WHERE ticker='{ticker}'
+                ORDER BY ts DESC
+                LIMIT 1
+            """
+            cur.execute(sql)
+            (adj_close, mv200, high_52w, low_52w) = cur.fetchone()
+            result += f"\t{ticker}\n"
+            result += f"\t\t adj_close: {adj_close:.2f}$, mv200: {mv200:.2f}$, high_52w: -{high_52w:.2f}%, low_52w: {low_52w:.2f}%\n"
+
+        cur.close()
+        conn.close()
+
+        return result
 
     def delete_ticker(self, ticker):
         """
@@ -72,7 +114,7 @@ class SlackStockBot:
         cur.close()
         conn.close()
 
-        return f"AFTER {self.get_stock_tickers()}"
+        return f"AFTER {self.show_stock_tickers()}"
 
     def main(self, user_name, text):
         """
@@ -92,6 +134,9 @@ class SlackStockBot:
         elif text.startswith("DELETE") and "TICKER" in text:
             ticker = text.split()[-1].strip()
             result += self.delete_ticker(ticker)
+        # show stock's summary
+        elif text.startswith("SUMMARY"):
+            result += self.show_summary()
 
         else: # default
             result += self.show_command_examples()
