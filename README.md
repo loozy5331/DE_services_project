@@ -1,33 +1,39 @@
-# DE_services_project
+<h1> DE_services_project </h1>
+
+<h2> 목표 </h2>
+
 DE_workflow_project에서 활용할 소스 데이터들을 수집하는 API 서비스 모음
 
-### service-stock.py
- 주식 정보를 불러와서 DB에 저장하는 서비스. 
+![etl_pipeline-services drawio](https://user-images.githubusercontent.com/36221276/156317538-e2da3a4c-3acc-4972-ae29-99b2952e0ba9.png)
 
-<동작 개요> </br>
-1. POST method로 json에 담아서 tickers를 전달 (ex. json={"tickers":\["SPY"\]})
-2. yfinance 라이브러리를 통해 주식 정보 추출
-3. 연결된 DB에 테이블 생성 및 데이터 추가 후 종료
-    - ts(timestamp): 주가 측정일
-    - close(FLOAT): 종가
-    - ticker(VARCHAR): 주식의 고유명사(?)
+<h2> 서비스 목록 </h2>
+<h3> stock </h3>
+ 
+ 저장된 주식 목록의 주가 정보를 DB에 저장하는 서비스. 
+
+<h3> slack </h3>
+
+ slack의 RTM(Real Time Messaging) bot 기능을 통해 아래의 기능들을 수행
+ 1. 수집할 ticker(주식의 ID) 추가 및 삭제
+ 2. 요약 테이블 정보 출력
+ 3. 현재 수집 중인 ticker 확인
 
 
-<사전 조건>
- - postgreSQL14 설치 및 실행
- - requirements.txt 파일 설치
- - .env 파일 생성
-<pre><code># ".env" 파일 
-# 환경변수 목록
+<h2> 사전 조건 </h2>
 
-# global
-LOCAL_HOST = "{LOCAL IP ADDRESS}" # (ex. "192.168.45.7")
+1. OLTP(DB) 설치(현재 postgreSQL14)
+2. docker-compose를 통해 서비스들 실행
 
-# api(flask)
-INBOUND_PORT = "{PORT}" # (ex. "50003")
+<h2> 코드 변경 시 유의사항</h2>
+1. DB 변경을 위해서는 각 서비스 폴더에 .env 파일을 생성해주어야 함.
+
+```text
+# ".env" 파일 
+# DB 환경변수 목록
 
 # db(postgreSQL)
-DB_USER_NAME = "{postgreSQL user ID}" # (ex. "postgres")
-DB_PASSWORD = "{postgreSQL user password}" # (ex. "postgres")
-DB_PORT = "{postgreSQL PORT}" # (ex. "5432")
-</code></pre>
+DB_HOST = "{YOUR DB HOST}"    # ex. 192.168.0.1
+DB_USER_NAME = "{DB USER}"    # ex. postgres
+DB_PASSWORD = "{DB PASSWORD}" # ex. postgres
+DB_PORT = "{DB PORT}"         # ex. 5432
+```
