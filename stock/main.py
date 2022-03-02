@@ -29,7 +29,6 @@ def get_tickers():
 def collect_stock_prices():
     """
         yahoo finance를 통해 종가를 DB(service.stock, OLTP)에 저장하는 서비스
-        1. json을 포함하는 request
     """
     if request.method == "POST":
         tickers = get_tickers()

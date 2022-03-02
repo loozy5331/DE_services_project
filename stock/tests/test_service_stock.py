@@ -11,4 +11,5 @@ if __name__=="__main__":
     url = f"http://{LOCAL_HOST}:{PORT}/service/stock"
 
     res = requests.post(url, json={"tickers":["QQQ", "SPY"]})
-    print(res.text)
+
+    print(f"status:{res.status_code}, text:{res.text}")
