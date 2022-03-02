@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import yfinance as yf
 
 from utils import db
@@ -83,15 +85,20 @@ class SlackStockBot:
 
         for ticker in tickers:
             sql = f"""
-                SELECT adj_close, mv200, high_52w, low_52w FROM summary.stock
+                SELECT ts, adj_close, mv200, high_52w, low_52w FROM summary.stock
                 WHERE ticker='{ticker}'
                 ORDER BY ts DESC
-                LIMIT 1
+                LIMIT 2
             """
             cur.execute(sql)
-            (adj_close, mv200, high_52w, low_52w) = cur.fetchone()
+
             result += f"\t{ticker}\n"
-            result += f"\t\t adj_close: {adj_close:.2f}$, mv200: {mv200:.2f}$, high_52w: -{high_52w:.2f}%, low_52w: {low_52w:.2f}%\n"
+            for (ts, adj_close, mv200, high_52w, low_52w) in cur.fetchall():
+                result += f"\t\t{datetime.strftime(ts, '%Y-%m-%d')}"
+                result += f"\tadj_close: {adj_close:.2f}$" 
+                result += f"\tmv200: {mv200:.2f}$"
+                result += f"\thigh_52w: {-high_52w:.2f}%"
+                result += f"\tlow_52w: {low_52w:.2f}%\n"
 
         cur.close()
         conn.close()
