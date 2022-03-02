@@ -2,8 +2,12 @@ version: '3.7'
 
 services:
   stock: # 주식 정보 수집 서비스
-    image: stock
+    build:
+      context: ./stock
+      dockerfile: Dockerfile
     ports:
       - 50001:50001
   slack: # slack bot RTM 서비스
-    image: slack
+    build:
+      context: ./slack
+      dockerfile: Dockerfile
