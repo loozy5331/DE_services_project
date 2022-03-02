@@ -30,10 +30,10 @@ def collect_stock_prices():
     """
         yahoo finance를 통해 종가를 DB(service.stock, OLTP)에 저장하는 서비스
     """
-    if request.method == "POST":
+    if request.method in ["POST"]:
         tickers = get_tickers()
-
-        print(tickers)
+        data = request.get_json()
+        
         sql = f"""
                 BEGIN;
                 DROP TABLE IF EXISTS service.stock;
@@ -45,7 +45,7 @@ def collect_stock_prices():
                 );
             """
         for ticker in tickers:
-            raw_df = yf.download([ticker])
+            raw_df = yf.download([ticker], end=data["end_date"])
             for ts, row in raw_df.iterrows():
                 sql += f"""
                         INSERT INTO service.stock (ts, close, adj_close, ticker)
