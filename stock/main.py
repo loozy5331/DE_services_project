@@ -58,7 +58,7 @@ def collect_stock_prices():
         cur.execute(sql)
         cur.execute("END;")
     else:
-        raise Exception("[ERROR] request must be GET method")
+        raise Exception("[ERROR] request must be POST method")
 
     return "done"
 
