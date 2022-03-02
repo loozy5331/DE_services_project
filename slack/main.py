@@ -10,6 +10,9 @@ from utils.slack import SlackStockBot
 
 @RTMClient.run_on(event="message")
 def listen_message(**payload):
+    """
+        slack에서 실시간으로 명령을 받아서 수행하는 bot
+    """
     text = payload['data']["text"]
     channel_id = payload["data"]["channel"]
     user = payload["data"]["user"]
@@ -20,5 +23,7 @@ def listen_message(**payload):
     result = slack_bot.main(user, text)
     web_client.chat_postMessage(channel=channel_id, text=result)
 
-rtm_client = RTMClient(token=SLACK_BOT_TOKEN)
-rtm_client.start()
+
+if __name__=="__main__":
+    rtm_client = RTMClient(token=SLACK_BOT_TOKEN)
+    rtm_client.start()

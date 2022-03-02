@@ -63,7 +63,6 @@ def collect_stock_prices():
 
 if __name__=="__main__":
     load_dotenv()
-    LOCAL_HOST = os.environ.get("LOCAL_HOST")
     INBOUND_PORT = os.environ.get("INBOUND_PORT")
 
-    app.run(host=LOCAL_HOST, port=INBOUND_PORT)
+    app.run(host="0.0.0.0", port=INBOUND_PORT)
